@@ -17,4 +17,7 @@ setuptools-scm
 pydantic-core
 huggingface_hub 
 numba
-triton
+tokenizers
+pyarrow
+scikit-learn
+pandas
