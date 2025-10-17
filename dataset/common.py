@@ -24,7 +24,7 @@ class PuzzleDatasetMetadata(pydantic.BaseModel):
 
 def dihedral_transform(arr: np.ndarray, tid: int) -> np.ndarray:
     """8 dihedral symmetries by rotate, flip and mirror"""
-    
+
     if tid == 0:
         return arr  # identity
     elif tid == 1:
@@ -34,16 +34,16 @@ def dihedral_transform(arr: np.ndarray, tid: int) -> np.ndarray:
     elif tid == 3:
         return np.rot90(arr, k=3)
     elif tid == 4:
-        return np.fliplr(arr)       # horizontal flip
+        return np.fliplr(arr)  # horizontal flip
     elif tid == 5:
-        return np.flipud(arr)       # vertical flip
+        return np.flipud(arr)  # vertical flip
     elif tid == 6:
-        return arr.T                # transpose (reflection along main diagonal)
+        return arr.T  # transpose (reflection along main diagonal)
     elif tid == 7:
         return np.fliplr(np.rot90(arr, k=1))  # anti-diagonal reflection
     else:
         return arr
-    
-    
+
+
 def inverse_dihedral_transform(arr: np.ndarray, tid: int) -> np.ndarray:
     return dihedral_transform(arr, DIHEDRAL_INVERSE[tid])
