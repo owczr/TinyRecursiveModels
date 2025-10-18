@@ -2,6 +2,7 @@ import ast
 import json
 import os
 import traceback
+from datetime import datetime
 from typing import Optional
 
 import numpy as np
@@ -42,12 +43,59 @@ class DataProcessConfig(BaseModel):
 
 def read_data(
     config,
-) -> tuple[pd.Series, pd.Series]:
+) -> pd.DataFrame:
     df = pd.read_parquet(config.dataset_url)
-    puzzles = df["puzzle"]
-    answers = df["solution"]
+    return df
 
-    return puzzles, answers
+
+def augment_data(df: pd.DataFrame) -> pd.DataFrame:
+    augmented_df = pd.DataFrame()
+
+    for _, row in df.iterrows():
+        names = np.vstack(row["solution"]["rows"])[:, 1]
+
+        sequences = []
+        for i in range(len(names)):
+            for j in range(i + 1, len(names) + 1):
+                sequences.append(names[i:j])
+
+        puzzle = row["puzzle"]
+        updated_puzzles = [puzzle + f"\n## Query\n{name_seq}" for name_seq in sequences]
+
+        solution = row["solution"]
+        rows = solution["rows"]
+
+        rows_stacked = np.vstack(rows)
+        updated_rows = [
+            rows_stacked[np.isin(rows_stacked[:, 1], name_seq)]
+            for name_seq in sequences
+        ]
+        updated_solutions = [
+            {"header": solution["header"], "rows": row} for row in updated_rows
+        ]
+
+        updated_ids = [
+            row["id"] + f"-{len(name_seq)}-{idx}"
+            for idx, name_seq in enumerate(sequences)
+        ]
+
+        updated_sizes = [row["size"] + f"*{len(name_seq)}" for name_seq in sequences]
+
+        now = datetime.now()
+
+        augmented_row = pd.DataFrame(
+            {
+                "id": updated_ids,
+                "size": updated_sizes,
+                "puzzle": updated_puzzles,
+                "solution": updated_solutions,
+                "created_at": now.strftime("%Y-%m-%dT%H:%M:%S.%f"),
+            }
+        )
+
+        augmented_df = pd.concat([augmented_df, augmented_row])
+
+    return augmented_df
 
 
 def get_tokenizer():
@@ -252,7 +300,10 @@ def save(X, y, problems_processed, tokenizer, vocab_size, name, config):
 
 def main(config):
     try:
-        puzzles, answers = read_data(config)
+        df = read_data(config)
+        df_aug = augment_data(df)
+        puzzles = df_aug["puzzle"]
+        answers = df_aug["solution"]
     except Exception as e:
         print(f"Error reading data: {e}")
         return
