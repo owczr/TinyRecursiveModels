@@ -468,7 +468,7 @@ def main(config):
         # Create category-specific subdirectories for original puzzles only
         for category, indices in original_category_to_indices.items():
             cat_dir = os.path.join(
-                config.output_dir, "test_by_category_original_only", category
+                config.output_dir, "test_by_category_original_only", category, "test"
             )
             os.makedirs(cat_dir, exist_ok=True)
 
