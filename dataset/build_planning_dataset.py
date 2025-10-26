@@ -15,7 +15,7 @@ from pyperplan import grounding
 from pyperplan.pddl.parser import Parser
 from sklearn.model_selection import train_test_split
 from tokenizers.models import WordLevel
-from tokenizers.pre_tokenizers import Split
+from tokenizers.pre_tokenizers import Whitespace
 from tokenizers.trainers import WordLevelTrainer
 
 SPECIAL_TOKENS = [
@@ -192,7 +192,7 @@ def get_tokenizer():
         ]
     )
 
-    tokenizer.pre_tokenizer = Split("", behavior="isolated")  # type: ignore
+    tokenizer.pre_tokenizer = Whitespace()
 
     trainer = WordLevelTrainer(min_frequency=1, special_tokens=SPECIAL_TOKENS)
 
@@ -259,7 +259,25 @@ def add_special_tokens(
         conditions, goals, questions, problem_objects
     ):
         processed.append(
-            f"[BOD]{domain_pddl}[EOD][BOO]{objects}[EOO][BOC]{condition}[EOC][BOG]{goal}[EOG][BOQ]{question}[EOQ]"
+            " ".join(
+                [
+                    "[BOD]",
+                    domain_pddl,
+                    "[EOD]",
+                    "[BOO]",
+                    objects,
+                    "[EOO]",
+                    "[BOC]",
+                    condition,
+                    "[EOC]",
+                    "[BOG]",
+                    goal,
+                    "[EOG]",
+                    "[BOQ]",
+                    question,
+                    "[EOQ]",
+                ]
+            )
         )
 
     return processed
