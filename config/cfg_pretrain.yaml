@@ -8,7 +8,7 @@ hydra:
   output_subdir: null
 
 # Data path
-data_paths: ['data/zebra-logic']
+data_paths: ['data/gsm8k']
 data_paths_test: []
 
 evaluators:
