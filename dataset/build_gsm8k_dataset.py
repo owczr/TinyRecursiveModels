@@ -264,13 +264,15 @@ def save(X, y, num_samples, tokenizer, vocab_size, name, config):
         json.dump(["<blank>"], f)
 
 
-def encode_questions(tokenizer, problems_processed_list):
+def encode_questions(tokenizer, problems_processed_list, max_length=None):
     if hasattr(tokenizer, "no_padding"):
         tokenizer.no_padding()
     if hasattr(tokenizer, "no_truncation"):
         tokenizer.no_truncation()
     temp_encoded = tokenizer.encode_batch(problems_processed_list)
-    max_length = max(len(enc.ids) for enc in temp_encoded)
+
+    if not max_length:
+        max_length = max(len(enc.ids) for enc in temp_encoded)
 
     # First, encode without padding to get raw sequences
     tokenizer.no_padding()
@@ -287,7 +289,7 @@ def encode_questions(tokenizer, problems_processed_list):
     problems_encoded = tokenizer.encode_batch(problems_processed_list)
     X = encoded_to_numpy(problems_encoded)
 
-    return X
+    return X, max_length
 
 
 def encode_answers(tokenizer, answers_processed_list, X):
@@ -341,13 +343,15 @@ def main(config):
         return
 
     try:
-        X_train = encode_questions(tokenizer, train_df["question"])
+        X_train, max_length = encode_questions(tokenizer, train_df["question"])
         y_train = encode_answers(
             tokenizer,
             train_df["answer"].apply(lambda row: row.split("####")[-1].strip()),
             X_train,
         )
-        X_test = encode_questions(tokenizer, test_df["question"])
+        X_test, _ = encode_questions(
+            tokenizer, test_df["question"], max_length=max_length
+        )
         y_test = encode_answers(
             tokenizer,
             test_df["answer"].apply(lambda row: row.split("####")[-1].strip()),
